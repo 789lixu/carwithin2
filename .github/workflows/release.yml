@@ -12,19 +12,18 @@ jobs:
       - run: |
           set -e
           unzip -q *.zip -d src
-          cd "$(dirname "$(dirname "$(find src -name generate_project.py -print -quit)")")"
+          cd "$(dirname "$(dirname "$(find src -name generate_project.py)")")"
           mkdir -p App/BundledIdentity
-          curl -sSL --fail -o /tmp/o.ipa https://github.com/xmz28/CarWithin/releases/download/v1.0.5/CarWithin-1.0.5-unsigned.ipa || echo "no identity"
-          unzip -j -o /tmp/o.ipa "Payload/*.app/certificate.p7b" "Payload/*.app/leaf.cer" "Payload/*.app/private.x963" -d App/BundledIdentity || true
-          ls -l App/BundledIdentity
+          curl -sSL --fail -o /tmp/o.ipa https://github.com/xmz28/CarWithin/releases/download/v1.0.5/CarWithin.ipa
+          unzip -j -o /tmp/o.ipa "Payload/*.app/certificate.p7b" -d App/BundledIdentity || true
           python3 Tools/generate_project.py
-          xcodebuild -project TDSCarKit.xcodeproj -scheme TDSCarKit -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" -derivedDataPath build
+          xcodebuild -project TDSCarKit.xcodeproj -scheme TDSCarKit -configuration Release -sdk iphoneos CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
           mkdir -p out/Payload
           cp -R build/Build/Products/Release-iphoneos/TDSCarKit.app out/Payload/
           cd out && zip -qry "$GITHUB_WORKSPACE/CarWithin-SF01.ipa" Payload
-      - name: Create public Release
+      - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: sf01-fix-${{ github.run_number }}
-          name: SF01通道反转适配版本
+          tag_name: sf01-${{ github.run_number }}
+          name: SF01端口反转版
           files: CarWithin-SF01.ipa
